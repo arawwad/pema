@@ -1,26 +1,36 @@
 <template>
   <v-container>
     <v-layout align-center wrap>
-      <v-flex xs12 sm6>
-        <v-select
-          v-model="selectedCustomers"
-          :items="customers"
-          item-text="name"
-          item-value="details"
-          attach
-          chips
-          label="Customers"
-          multiple
-        ></v-select>
+      <v-form ref="form" v-model="formValid" lazy-validation>
+        <v-flex xs12 sm6>
+          <v-select
+            v-model="selectedCustomers"
+            :items="customers"
+            item-text="name"
+            item-value="details"
+            attach
+            chips
+            label="Customers"
+            multiple
+            box
+            required
+          ></v-select>
 
-        <v-select
-          v-model="selectedTrailer"
-          :items="trailers"
-          item-text="name"
-          item-value="capacity"
-          label="Trailers"
-        ></v-select>
-      </v-flex>
+          <v-select
+            v-model="selectedTrailer"
+            :items="trailers"
+            item-text="name"
+            item-value="capacity"
+            label="Trailers"
+            box
+            :item-disabled="checkCapacity"
+            required
+          ></v-select>
+          <v-btn :disabled="!valid" color="success" @click="validate"
+            >Dispatch</v-btn
+          >
+        </v-flex>
+      </v-form>
     </v-layout>
 
     <GmapMap
@@ -45,8 +55,9 @@
 export default {
   data() {
     return {
+      formValid: true,
       selectedCustomers: [],
-      selectedTrailer: {},
+      selectedTrailer: "",
       cities: {
         Cottbus: { lat: 51.75631, lng: 14.332868 },
         Freiburg: { lat: 47.997791, lng: 7.842609 },
@@ -61,11 +72,11 @@ export default {
         Berlin: { lat: 52.520008, lng: 13.404954 }
       },
       trailers: [
+        { name: "Fischer", capacity: 100 },
+        { name: "Weber", capacity: 200 },
         { name: "Müller", capacity: 100 },
         { name: "Schmidt", capacity: 150 },
-        { name: "Schneider", capacity: 150 },
-        { name: "Fischer", capacity: 100 },
-        { name: "Weber", capacity: 200 }
+        { name: "Schneider", capacity: 150 }
       ],
       customers: [
         {
@@ -90,7 +101,24 @@ export default {
         }
       ]
     };
-  }
+  },
+  computed: {
+    currentTotalCapacity() {
+      return this.selectedCustomers.reduce((acc, curr) => {
+        return acc.capacity + curr.capacity;
+      }, 0);
+    }
+  },
+  methods: {
+    checkCapacity(val) {
+      if (val.capacity < this.currentTotalCapacity) {
+        return false;
+      } else {
+        return true;
+      }
+    }
+  },
+  watch: {}
 };
 </script>
 
